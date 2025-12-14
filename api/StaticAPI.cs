@@ -13,7 +13,11 @@ namespace TubeRepair_CSharp.api
         /// </summary>
         public static IResult CategoriesCat()
         {
-            string filePath = Path.Combine(Directory.GetCurrentDirectory(), "static", "categories.cat");
+            ConfigReader config = ConfigReader.Instance;
+            
+            // Use playlist.cat if playlist trending is enabled
+            string fileName = config.UsePlaylistTrending ? "playlist.cat" : "categories.cat";
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), "static", fileName);
 
             if (!System.IO.File.Exists(filePath))
             {

@@ -32,6 +32,15 @@ namespace TubeRepair_CSharp
         public string TrendingPlaylistFilm { get; private set; } = "PL-p0-Yh03xpiso5oS6ZEa7PeV8wHp2dVp";
         public string TrendingPlaylistGames { get; private set; } = "PL-p0-Yh03xpi_x9L-Lqop_Kj6MTY38jqv";
         public string TrendingPlaylistMusic { get; private set; } = "PL-p0-Yh03xpgeN91B_sPpv4lJY-UfThEi";
+        public string TrendingPlaylistAutos { get; private set; } = "PL-p0-Yh03xphS0WmPB1u5mQbRJjPRn63U";
+        public string TrendingPlaylistAnimals { get; private set; } = "PL-p0-Yh03xpgqRqXBDc9DbcCysUjd_CSB";
+        public string TrendingPlaylistSports { get; private set; } = "PL-p0-Yh03xpg6CLD7MDqzsAiB9aFjssWb";
+        public string TrendingPlaylistComedy { get; private set; } = "PL-p0-Yh03xpj0Js3pnGO20BWWiHVn1oHz";
+        public string TrendingPlaylistPeople { get; private set; } = "PL-p0-Yh03xphi7-iBuIshu7olymbv7lY-";
+        public string TrendingPlaylistNews { get; private set; } = "PL-p0-Yh03xpgeG3YUmWESSrg84W8ELEUO";
+        public string TrendingPlaylistEntertainment { get; private set; } = "PL-p0-Yh03xpjoqDAI46lgo8-TLDnE7mHF";
+        public string TrendingPlaylistHowto { get; private set; } = "PL-p0-Yh03xphCxNSaXOW09V3pKgRQCFvn";
+        public string TrendingPlaylistTech { get; private set; } = "PL-p0-Yh03xpgQgBqDn3T4EZbxoaYXkQjY";
 
         private void ServerIDHandler()
         {
@@ -151,6 +160,15 @@ namespace TubeRepair_CSharp
             TrendingPlaylistFilm = FindEnvironmentVariableOrConfig(config, "TRENDING_PLAYLIST_FILM", TrendingPlaylistFilm);
             TrendingPlaylistGames = FindEnvironmentVariableOrConfig(config, "TRENDING_PLAYLIST_GAMES", TrendingPlaylistGames);
             TrendingPlaylistMusic = FindEnvironmentVariableOrConfig(config, "TRENDING_PLAYLIST_MUSIC", TrendingPlaylistMusic);
+            TrendingPlaylistAutos = FindEnvironmentVariableOrConfig(config, "TRENDING_PLAYLIST_AUTOS", TrendingPlaylistAutos);
+            TrendingPlaylistAnimals = FindEnvironmentVariableOrConfig(config, "TRENDING_PLAYLIST_ANIMALS", TrendingPlaylistAnimals);
+            TrendingPlaylistSports = FindEnvironmentVariableOrConfig(config, "TRENDING_PLAYLIST_SPORTS", TrendingPlaylistSports);
+            TrendingPlaylistComedy = FindEnvironmentVariableOrConfig(config, "TRENDING_PLAYLIST_COMEDY", TrendingPlaylistComedy);
+            TrendingPlaylistPeople = FindEnvironmentVariableOrConfig(config, "TRENDING_PLAYLIST_PEOPLE", TrendingPlaylistPeople);
+            TrendingPlaylistNews = FindEnvironmentVariableOrConfig(config, "TRENDING_PLAYLIST_NEWS", TrendingPlaylistNews);
+            TrendingPlaylistEntertainment = FindEnvironmentVariableOrConfig(config, "TRENDING_PLAYLIST_ENTERTAINMENT", TrendingPlaylistEntertainment);
+            TrendingPlaylistHowto = FindEnvironmentVariableOrConfig(config, "TRENDING_PLAYLIST_HOWTO", TrendingPlaylistHowto);
+            TrendingPlaylistTech = FindEnvironmentVariableOrConfig(config, "TRENDING_PLAYLIST_TECH", TrendingPlaylistTech);
         }
 
     }

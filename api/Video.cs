@@ -42,14 +42,22 @@ namespace TubeRepair_CSharp.api
                 string playlistId;
                 if (!string.IsNullOrEmpty(popular))
                 {
-                    if (popular == "most_popular_Film")
-                        playlistId = config.TrendingPlaylistFilm;
-                    else if (popular == "most_popular_Games")
-                        playlistId = config.TrendingPlaylistGames;
-                    else if (popular == "most_popular_Music")
-                        playlistId = config.TrendingPlaylistMusic;
-                    else
-                        playlistId = config.TrendingPlaylistDefault;
+                    playlistId = popular switch
+                    {
+                        "most_popular_Film" => config.TrendingPlaylistFilm,
+                        "most_popular_Autos" => config.TrendingPlaylistAutos,
+                        "most_popular_Music" => config.TrendingPlaylistMusic,
+                        "most_popular_Animals" => config.TrendingPlaylistAnimals,
+                        "most_popular_Sports" => config.TrendingPlaylistSports,
+                        "most_popular_Games" => config.TrendingPlaylistGames,
+                        "most_popular_Comedy" => config.TrendingPlaylistComedy,
+                        "most_popular_People" => config.TrendingPlaylistPeople,
+                        "most_popular_News" => config.TrendingPlaylistNews,
+                        "most_popular_Entertainment" => config.TrendingPlaylistEntertainment,
+                        "most_popular_Howto" => config.TrendingPlaylistHowto,
+                        "most_popular_Tech" => config.TrendingPlaylistTech,
+                        _ => config.TrendingPlaylistDefault
+                    };
                 }
                 else
                 {
