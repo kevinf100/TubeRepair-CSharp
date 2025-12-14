@@ -32,6 +32,9 @@ namespace TubeRepair_CSharp.api
                 url = url[..^1];
             }
 
+            // Process pagination
+            var (currentPage, nextPage) = Helpers.ProcessStartIndex(request);
+
             // Prepare Invidious API base
             var apiBase = config.InvidiusURL.TrimEnd('/');
             string apiurl;
@@ -63,7 +66,8 @@ namespace TubeRepair_CSharp.api
                 {
                     playlistId = config.TrendingPlaylistDefault;
                 }
-                apiurl = $"{apiBase}/api/v1/playlists/{playlistId}";
+                // Use page parameter for playlists
+                apiurl = $"{apiBase}/api/v1/playlists/{playlistId}?page={currentPage}";
             }
             else
             {
@@ -163,7 +167,8 @@ namespace TubeRepair_CSharp.api
                 var templateData = new Dictionary<string, object?>
                 {
                     ["data"] = items,
-                    ["url"] = url
+                    ["url"] = url,
+                    ["next_page"] = items.Count > 0 && config.UsePlaylistTrending ? nextPage : null
                 };
 
                 string templateName = isClassic ? "classic_featured.scriban" : "frontpage_feed.scriban";
