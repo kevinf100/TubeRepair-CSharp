@@ -1,0 +1,113 @@
+﻿using System;
+
+namespace TubeRepair_CSharp
+{
+    // https://hackernoon.com/6-ways-to-generate-html-documents-with-c-net-7w6633p5
+    public sealed class HtmlBuilder
+    {
+        private static readonly HtmlBuilder instance = new();
+        public static HtmlBuilder Instance
+        {
+            get
+            {
+                return instance;
+            }
+        }
+        public string Html { get; }
+        static HtmlBuilder()
+        {
+        }
+
+        private HtmlBuilder()
+        {
+            ConfigReader config = ConfigReader.Instance;
+            string version = "v0.1.0 C# Beta";
+            string serverID = config.ServerID;
+
+            Html = $@"
+<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>{version}</title>
+    <style>
+        body {{
+            margin:1em;
+        }}
+        @media only screen and (max-width: 700px) {{
+            #title {{
+              font-size: 1.65em;
+              margin-top: 8px;
+            }}
+          }}
+
+        /* container */
+        #ee {{
+            font-family: ""Helvetica Neue"", Helvetica, Arial, sans-serif;
+            margin: 0 auto;
+            max-width: 100%;
+            min-width: 200px;
+            width: 700px;
+        }}
+        /* default hr sucks */
+        #hr {{
+            width: auto;
+            height: 1px;
+            background-color: black;
+        }}
+        #credits {{
+            color:rgb(150, 150, 150);
+        }}
+        #link-box {{
+            border: 1px solid grey;
+            border-radius: 5px;
+        }}
+        #link-box a {{
+            color: green;
+        }}
+    </style>
+</head>
+<body>
+    <div id=""ee"">
+    <h1><img class=""title-img""> TubeRepair server</h1>
+    <h3><img class=""title-img""> {version}</h3>
+    <div id=""hr""></div>
+    <p>This was written in C# as a backend for the TubeRepair tweak by <a href=""https://github.com/bag-xml"">bag.xml</a> (et al).</p>
+    <p>Check it out via Github: <a href=""https://github.com/kendoodoo/tuberepair-python"">tuberepair-csharp</a></p>
+    <p>My ServerID is {serverID}</p>
+    <p id=""info""></p>
+    <h3>How to add this server:</h3>
+    <div style=""text-align: center;"">
+        <p>Open TubeRepair's setting and change the custom URL to:</p>
+        <div id=""link-box""><b><a href=""/""><p id=""url"">js is not available</p></a></b></div>
+        <p id=""credits"">(hold to copy)</p>
+    </div>
+    <br>
+    </div>
+</body>
+<script>
+// the slash at the end for tweak to work
+var link = window.location.origin + '/';
+document.getElementById('url').innerHTML = link;
+
+var infoEle = document.getElementById('info');
+var medium = ""True"";
+medium = medium === ""True"";
+if (medium) {{
+    infoEle.innerHTML = ""I'm currently not sending HLS videos by default. This is an SD (360p) Server!""
+}} else {{
+    infoEle.innerHTML = ""I'm currently sending HLS videos by default. This is an p Server!""
+}}
+
+var imgs = document.getElementsByClassName('title-img');
+for (var i = 0; i < imgs.length; i++) {{
+    imgs[i].src = src=""data:image/png;base64,R0lGODlhGAAYAPMAAP////vzBf9kA90JB/IIhEcApQAA0wKr6h+3FABkElYsBZBxOr+/v4CAgEBAQAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/h1HaWZCdWlsZGVyIDAuMiBieSBZdmVzIFBpZ3VldAAh+QQNZAAMACwAAAAAGAAYAEMEZ5DJSRkANWcwOngP52lWN1xoipoYWZqjK4nnBa7xDO9832q0k2zDov1cxk/ISEralhcWxYm6qaSvnhaLzA2nvOMwyZVRy8CiFQ32PHFCYlEJj0+CqmsZprLWMXh5gnxBW1stgokqEhEAIfkEDWQADAAsAAAAABgAGABDBGCQyUkZADVnMPq93YBpnPedZzhqVqiyVCmioBe7eK6vm8vDE1lNBJQIUS+SivZJGpdMpK2lq/qKpV/xidPCjk7gcei9mVJT5VlK7EHZ7aAvKosz5vQ6Rp9vLq2ASX10EhEAOw=="";
+}}
+</script>
+</html>
+
+";
+        }
+    }
+}
