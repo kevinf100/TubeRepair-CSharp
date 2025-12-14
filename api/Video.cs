@@ -34,15 +34,42 @@ namespace TubeRepair_CSharp.api
 
             // Prepare Invidious API base
             var apiBase = config.InvidiusURL.TrimEnd('/');
-            var apiurl = $"{apiBase}/api/v1/trending?region={regioncode}";
-            if (!string.IsNullOrEmpty(popular))
+            string apiurl;
+            
+            // Use playlist trending if enabled
+            if (config.UsePlaylistTrending)
             {
-                if (popular == "most_popular_Film")
-                    apiurl = $"{apiBase}/api/v1/trending?type=Movies&region={regioncode}";
-                else if (popular == "most_popular_Games")
-                    apiurl = $"{apiBase}/api/v1/trending?type=Gaming&region={regioncode}";
-                else if (popular == "most_popular_Music")
-                    apiurl = $"{apiBase}/api/v1/trending?type=Music&region={regioncode}";
+                string playlistId;
+                if (!string.IsNullOrEmpty(popular))
+                {
+                    if (popular == "most_popular_Film")
+                        playlistId = config.TrendingPlaylistFilm;
+                    else if (popular == "most_popular_Games")
+                        playlistId = config.TrendingPlaylistGames;
+                    else if (popular == "most_popular_Music")
+                        playlistId = config.TrendingPlaylistMusic;
+                    else
+                        playlistId = config.TrendingPlaylistDefault;
+                }
+                else
+                {
+                    playlistId = config.TrendingPlaylistDefault;
+                }
+                apiurl = $"{apiBase}/api/v1/playlists/{playlistId}";
+            }
+            else
+            {
+                // Use traditional trending API
+                apiurl = $"{apiBase}/api/v1/trending?region={regioncode}";
+                if (!string.IsNullOrEmpty(popular))
+                {
+                    if (popular == "most_popular_Film")
+                        apiurl = $"{apiBase}/api/v1/trending?type=Movies&region={regioncode}";
+                    else if (popular == "most_popular_Games")
+                        apiurl = $"{apiBase}/api/v1/trending?type=Gaming&region={regioncode}";
+                    else if (popular == "most_popular_Music")
+                        apiurl = $"{apiBase}/api/v1/trending?type=Music&region={regioncode}";
+                }
             }
 
             // Fetch API with caching (1 hour expiration)
@@ -71,10 +98,35 @@ namespace TubeRepair_CSharp.api
             try
             {
                 using var doc = JsonDocument.Parse(content);
-                if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                var root = doc.RootElement;
+                
+                List<object> items = new List<object>();
+                
+                // Handle playlist response format
+                if (config.UsePlaylistTrending && root.TryGetProperty("videos", out var videosArray))
                 {
-                    var root = doc.RootElement;
-                    var items = new List<object>();
+                    // Playlist API response has videos array nested in the response
+                    for (int i = 0; i < Math.Min(takeCount, videosArray.GetArrayLength()); i++)
+                    {
+                        var video = videosArray[i];
+                        // Convert JSON element to a dictionary for template
+                        var videoDict = new Dictionary<string, object>
+                        {
+                            ["video_id"] = video.TryGetProperty("videoId", out var vidId) ? vidId.GetString() ?? "" : "",
+                            ["title"] = video.TryGetProperty("title", out var title) ? title.GetString() ?? "" : "",
+                            ["author"] = video.TryGetProperty("author", out var author) ? author.GetString() ?? "" : "",
+                            ["author_id"] = video.TryGetProperty("authorId", out var authorId) ? authorId.GetString() ?? "" : "",
+                            ["description"] = video.TryGetProperty("description", out var desc) ? desc.GetString() ?? "" : "",
+                            ["view_count"] = video.TryGetProperty("viewCount", out var views) ? views.GetInt64() : 0,
+                            ["published"] = video.TryGetProperty("published", out var pub) ? pub.GetInt64() : 0,
+                            ["length_seconds"] = video.TryGetProperty("lengthSeconds", out var length) ? length.GetInt32() : 0
+                        };
+                        items.Add(videoDict);
+                    }
+                }
+                // Handle regular trending response format
+                else if (root.ValueKind == JsonValueKind.Array)
+                {
                     for (int i = 0; i < Math.Min(takeCount, root.GetArrayLength()); i++)
                     {
                         var video = root[i];
@@ -92,23 +144,23 @@ namespace TubeRepair_CSharp.api
                         };
                         items.Add(videoDict);
                     }
-
-                    // Render template
-                    var templateData = new Dictionary<string, object?>
-                    {
-                        ["data"] = items,
-                        ["url"] = url
-                    };
-
-                    string templateName = isClassic ? "classic_featured.scriban" : "frontpage_feed.scriban";
-                    var rendered = TemplatesLoader.Instance.RenderTemplate(templateName, templateData);
-                    return Results.Content(rendered, "application/atom+xml; charset=utf-8");
                 }
                 else
                 {
-                    // Not an array — return raw content
+                    // Not expected format — return raw content
                     return Results.Content(content, "application/json");
                 }
+
+                // Render template
+                var templateData = new Dictionary<string, object?>
+                {
+                    ["data"] = items,
+                    ["url"] = url
+                };
+
+                string templateName = isClassic ? "classic_featured.scriban" : "frontpage_feed.scriban";
+                var rendered = TemplatesLoader.Instance.RenderTemplate(templateName, templateData);
+                return Results.Content(rendered, "application/atom+xml; charset=utf-8");
             }
             catch (JsonException)
             {

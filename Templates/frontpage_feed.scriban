@@ -27,6 +27,9 @@
   <openSearch:startIndex>1</openSearch:startIndex>
 
 {{~ for video in data ~}}
+	{{ if video.title == "" }}
+		{{ continue }}
+	{{ end }}
 	<entry gd:etag='W/&quot;{{video.video_id}}.&quot;'>
 		<id>tag:youtube.com,2008:playlist:{{video.video_id}}:{{video.video_id}}</id>
 		<published>{{ unix video.published }}</published>

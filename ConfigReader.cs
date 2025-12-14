@@ -27,6 +27,11 @@ namespace TubeRepair_CSharp
         public int FeaturedVideosCount { get; private set; } = 20;
         public int CommentCount { get; private set; } = 20;
         public string SortComments { get; private set; } = "popular";
+        public bool UsePlaylistTrending { get; private set; } = false;
+        public string TrendingPlaylistDefault { get; private set; } = "PL-p0-Yh03xpi2AsCiyuafMeQrMF6czMoL";
+        public string TrendingPlaylistFilm { get; private set; } = "PL-p0-Yh03xpiso5oS6ZEa7PeV8wHp2dVp";
+        public string TrendingPlaylistGames { get; private set; } = "PL-p0-Yh03xpi_x9L-Lqop_Kj6MTY38jqv";
+        public string TrendingPlaylistMusic { get; private set; } = "PL-p0-Yh03xpgeN91B_sPpv4lJY-UfThEi";
 
         private void ServerIDHandler()
         {
@@ -140,6 +145,12 @@ namespace TubeRepair_CSharp
             FeaturedVideosCount = FindEnvironmentVariableOrConfigInt(config, "FEATURED_VIDEOS", FeaturedVideosCount);
             CommentCount = FindEnvironmentVariableOrConfigInt(config, "COMMENTS", CommentCount);
             SortComments = FindEnvironmentVariableOrConfig(config, "SORT_COMMENTS", SortComments);
+            UsePlaylistTrending = FindEnvironmentVariableOrConfigBool(config, "USE_PLAYLIST_TRENDING", UsePlaylistTrending);
+            Console.WriteLine($"Use Playlist Trending: {UsePlaylistTrending}");
+            TrendingPlaylistDefault = FindEnvironmentVariableOrConfig(config, "TRENDING_PLAYLIST_DEFAULT", TrendingPlaylistDefault);
+            TrendingPlaylistFilm = FindEnvironmentVariableOrConfig(config, "TRENDING_PLAYLIST_FILM", TrendingPlaylistFilm);
+            TrendingPlaylistGames = FindEnvironmentVariableOrConfig(config, "TRENDING_PLAYLIST_GAMES", TrendingPlaylistGames);
+            TrendingPlaylistMusic = FindEnvironmentVariableOrConfig(config, "TRENDING_PLAYLIST_MUSIC", TrendingPlaylistMusic);
         }
 
     }
