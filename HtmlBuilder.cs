@@ -74,7 +74,7 @@ namespace TubeRepair_CSharp
     <h3><img class=""title-img""> {version}</h3>
     <div id=""hr""></div>
     <p>This was written in C# as a backend for the TubeRepair tweak by <a href=""https://github.com/bag-xml"">bag.xml</a> (et al).</p>
-    <p>Check it out via Github: <a href=""https://github.com/kendoodoo/tuberepair-python"">tuberepair-csharp</a></p>
+    <p>Check it out via Github: <a href=""https://github.com/kevinf100/TubeRepair-CSharp"">tuberepair-csharp</a></p>
     <p>My ServerID is {serverID}</p>
     <p id=""info""></p>
     <h3>How to add this server:</h3>
@@ -102,7 +102,7 @@ if (medium) {{
 
 var imgs = document.getElementsByClassName('title-img');
 for (var i = 0; i < imgs.length; i++) {{
-    imgs[i].src = src=""data:image/png;base64,R0lGODlhGAAYAPMAAP////vzBf9kA90JB/IIhEcApQAA0wKr6h+3FABkElYsBZBxOr+/v4CAgEBAQAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/h1HaWZCdWlsZGVyIDAuMiBieSBZdmVzIFBpZ3VldAAh+QQNZAAMACwAAAAAGAAYAEMEZ5DJSRkANWcwOngP52lWN1xoipoYWZqjK4nnBa7xDO9832q0k2zDov1cxk/ISEralhcWxYm6qaSvnhaLzA2nvOMwyZVRy8CiFQ32PHFCYlEJj0+CqmsZprLWMXh5gnxBW1stgokqEhEAIfkEDWQADAAsAAAAABgAGABDBGCQyUkZADVnMPq93YBpnPedZzhqVqiyVCmioBe7eK6vm8vDE1lNBJQIUS+SivZJGpdMpK2lq/qKpV/xidPCjk7gcei9mVJT5VlK7EHZ7aAvKosz5vQ6Rp9vLq2ASX10EhEAOw=="";
+    imgs[i].src = ""data:image/png;base64,R0lGODlhGAAYAPMAAP////vzBf9kA90JB/IIhEcApQAA0wKr6h+3FABkElYsBZBxOr+/v4CAgEBAQAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/h1HaWZCdWlsZGVyIDAuMiBieSBZdmVzIFBpZ3VldAAh+QQNZAAMACwAAAAAGAAYAEMEZ5DJSRkANWcwOngP52lWN1xoipoYWZqjK4nnBa7xDO9832q0k2zDov1cxk/ISEralhcWxYm6qaSvnhaLzA2nvOMwyZVRy8CiFQ32PHFCYlEJj0+CqmsZprLWMXh5gnxBW1stgokqEhEAIfkEDWQADAAsAAAAABgAGABDBGCQyUkZADVnMPq93YBpnPedZzhqVqiyVCmioBe7eK6vm8vDE1lNBJQIUS+SivZJGpdMpK2lq/qKpV/xidPCjk7gcei9mVJT5VlK7EHZ7aAvKosz5vQ6Rp9vLq2ASX10EhEAOw=="";
 }}
 </script>
 </html>

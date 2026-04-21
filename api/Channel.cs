@@ -66,9 +66,9 @@ namespace TubeRepair_CSharp.api
             ConfigReader config = ConfigReader.Instance;
 
             // Validate channel ID
-            if (string.IsNullOrEmpty(channelId))
+            if (!InputValidator.IsValidChannelId(channelId))
             {
-                return Results.Content("Missing channel ID", "text/plain", statusCode: 400);
+                return Results.Content("Invalid channel ID", "text/plain", statusCode: 400);
             }
 
             // Clamp Res if provided
@@ -292,9 +292,9 @@ namespace TubeRepair_CSharp.api
             ConfigReader config = ConfigReader.Instance;
 
             // Validate channel ID
-            if (string.IsNullOrEmpty(channelId))
+            if (!InputValidator.IsValidChannelId(channelId))
             {
-                return Results.Content("Missing channel ID", "text/plain", statusCode: 400);
+                return Results.Content("Invalid channel ID", "text/plain", statusCode: 400);
             }
 
             // Clamp Res if provided

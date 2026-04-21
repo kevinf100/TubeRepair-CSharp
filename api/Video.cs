@@ -18,6 +18,18 @@ namespace TubeRepair_CSharp.api
         {
             ConfigReader config = ConfigReader.Instance;
 
+            // Validate region code
+            if (!string.IsNullOrEmpty(regioncode) && !InputValidator.IsValidRegionCode(regioncode))
+            {
+                return Results.Content("Invalid region code", "text/plain", statusCode: 400);
+            }
+
+            // Validate popular parameter (allow alphanumeric with underscores)
+            if (!string.IsNullOrEmpty(popular) && !InputValidator.IsValidIdentifier(popular))
+            {
+                return Results.Content("Invalid popular parameter", "text/plain", statusCode: 400);
+            }
+
             // Clamp Res if provided
             if (res.HasValue)
             {
@@ -38,7 +50,7 @@ namespace TubeRepair_CSharp.api
             // Prepare Invidious API base
             var apiBase = config.InvidiusURL.TrimEnd('/');
             string apiurl;
-            
+
             // Use playlist trending if enabled
             if (config.UsePlaylistTrending)
             {
@@ -111,9 +123,9 @@ namespace TubeRepair_CSharp.api
             {
                 using var doc = JsonDocument.Parse(content);
                 var root = doc.RootElement;
-                
+
                 List<object> items = new List<object>();
-                
+
                 // Handle playlist response format
                 if (config.UsePlaylistTrending && root.TryGetProperty("videos", out var videosArray))
                 {
@@ -338,6 +350,12 @@ namespace TubeRepair_CSharp.api
         {
             ConfigReader config = ConfigReader.Instance;
 
+            // Validate video ID
+            if (!InputValidator.IsValidVideoId(videoid))
+            {
+                return Results.Content("Invalid video ID", "text/plain", statusCode: 400);
+            }
+
             // Clamp Res if provided
             if (res.HasValue)
             {
@@ -442,6 +460,12 @@ namespace TubeRepair_CSharp.api
         {
             ConfigReader config = ConfigReader.Instance;
 
+            // Validate video ID
+            if (!InputValidator.IsValidVideoId(videoId))
+            {
+                return Results.Content("Invalid video ID", "text/plain", statusCode: 400);
+            }
+
             // Clamp Res if provided
             if (res.HasValue)
             {
@@ -545,6 +569,12 @@ namespace TubeRepair_CSharp.api
         public static async Task<IResult> GetVideo(string videoId)
         {
             ConfigReader config = ConfigReader.Instance;
+
+            // Validate video ID
+            if (!InputValidator.IsValidVideoId(videoId))
+            {
+                return Results.Content("Invalid video ID", "text/plain", statusCode: 400);
+            }
 
             // Prepare Invidious API base
             var apiBase = config.InvidiusURL.TrimEnd('/');

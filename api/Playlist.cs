@@ -21,6 +21,12 @@ namespace TubeRepair_CSharp.api
         {
             ConfigReader config = ConfigReader.Instance;
 
+            // Validate channel ID
+            if (!InputValidator.IsValidChannelId(channelId))
+            {
+                return Results.Content("Invalid channel ID", "text/plain", statusCode: 400);
+            }
+
             // Clamp Res if provided
             if (res.HasValue)
             {
@@ -131,6 +137,12 @@ namespace TubeRepair_CSharp.api
         public static async Task<IResult> GetPlaylistVideos(HttpRequest request, string playlistId, int? res = null)
         {
             ConfigReader config = ConfigReader.Instance;
+
+            // Validate playlist ID
+            if (!InputValidator.IsValidPlaylistId(playlistId))
+            {
+                return Results.Content("Invalid playlist ID", "text/plain", statusCode: 400);
+            }
 
             // Check for invalid playlist ID
             if (string.IsNullOrWhiteSpace(playlistId) || playlistId.Trim().Equals("(null)", StringComparison.OrdinalIgnoreCase))
