@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net;
+using System.Security;
 using System.Text.Json;
+using System.Xml;
 using System.Threading.Tasks;
 using System.Web;
 using Microsoft.AspNetCore.Http;
@@ -23,6 +26,9 @@ namespace TubeRepair_CSharp.api
         /// </summary>
         public static void LoadRoutes(WebApplication app)
         {
+            // Channel Activity uses an events feed, not the uploads feed.
+            app.MapGet("/feeds/api/events", (HttpRequest req) => GetActivity(req));
+            app.MapGet("/{res:int}/feeds/api/events", (HttpRequest req, int res) => GetActivity(req, res));
 
             // Channel routes
             // Channel info
@@ -57,6 +63,196 @@ namespace TubeRepair_CSharp.api
             {
                 return await Channel.GetUploads(req, channelId, res);
             });
+        }
+        /// <summary>
+        /// Translate recent channel uploads into legacy GData upload events.
+        /// Inline video entries are always included for the channel Activity client.
+        /// </summary>
+        public static async Task<IResult> GetActivity(HttpRequest request, int? res = null)
+        {
+            string? channelId = request.Query["author"];
+            if (string.IsNullOrWhiteSpace(channelId))
+                return Results.Content("Missing channel query parameter 'author'", "text/plain", statusCode: 400);
+            if (!InputValidator.IsValidChannelId(channelId))
+                return Results.Content("Invalid channel ID", "text/plain", statusCode: 400);
+
+            int pageSize = ConfigReader.Instance.ActivityMaxResults;
+            if (request.Query.ContainsKey("max-results"))
+            {
+                if (!int.TryParse(request.Query["max-results"], out int requestedSize) || requestedSize < 1)
+                    return Results.Content("Invalid 'max-results' parameter", "text/plain", statusCode: 400);
+                pageSize = Math.Min(requestedSize, pageSize);
+            }
+            int startIndex = 1;
+            if (request.Query.ContainsKey("start-index") &&
+                (!int.TryParse(request.Query["start-index"], out startIndex) || startIndex < 1))
+                return Results.Content("Invalid 'start-index' parameter", "text/plain", statusCode: 400);
+
+            string? token = request.Query["continuation"];
+            int skip = string.IsNullOrEmpty(token) ? startIndex - 1 : 0;
+            // Our next links retain the offset when a capped response ends inside an Invidious page.
+            if (request.Query.ContainsKey("page-offset") &&
+                (!int.TryParse(request.Query["page-offset"], out skip) || skip < 0))
+                return Results.Content("Invalid 'page-offset' parameter", "text/plain", statusCode: 400);
+
+            if (res.HasValue)
+                res = Math.Clamp(res.Value, 144, 10000);
+            string url = $"{request.Scheme}://{request.Host}{request.PathBase}";
+            if (res.HasValue)
+                url += $"/{res.Value}";
+
+            // Escape all dynamic XML values before passing them to Scriban.
+            static string Xml(string value) => SecurityElement.Escape(XmlConvert.VerifyXmlChars(value)) ?? "";
+            static string ReadString(JsonElement element, string name, string fallback = "")
+            {
+                if (!element.TryGetProperty(name, out var value) || value.ValueKind == JsonValueKind.Null)
+                    return fallback;
+                if (value.ValueKind != JsonValueKind.String)
+                    throw new JsonException($"Invalid {name}");
+                return value.GetString() ?? fallback;
+            }
+            static long ReadNumber(JsonElement element, string name)
+            {
+                if (!element.TryGetProperty(name, out var value))
+                    return 0;
+                if (value.ValueKind != JsonValueKind.Number || !value.TryGetInt64(out var number))
+                    throw new JsonException($"Invalid {name}");
+                return number;
+            }
+
+            Dictionary<string, object?> templateData;
+            try
+            {
+                var selectedVideos = new List<JsonElement>();
+                var visitedTokens = new HashSet<string>();
+                string? currentToken = token;
+                string? nextToken = null;
+                int nextOffset = 0;
+                bool hasNext = false;
+                while (true)
+                {
+                    if (!visitedTokens.Add(currentToken ?? ""))
+                        throw new JsonException("Repeated channel continuation token");
+                    string apiUrl = $"{ConfigReader.Instance.InvidiusURL.TrimEnd('/')}/api/v1/channels/{channelId}/videos?sort_by=newest";
+                    if (!string.IsNullOrEmpty(currentToken))
+                        apiUrl += $"&continuation={Uri.EscapeDataString(currentToken)}";
+                    using var response = await CachedHttpClient.Instance.GetResponseAsync(apiUrl, TimeSpan.FromMinutes(30));
+                    if (response.StatusCode == HttpStatusCode.NotFound)
+                        return Results.Content("Channel not found", "text/plain", statusCode: 404);
+                    if (!response.IsSuccessStatusCode)
+                        return Results.Content("Failed to fetch channel activity", "text/plain", statusCode: 502);
+                    using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                    var root = doc.RootElement;
+                    if (root.ValueKind != JsonValueKind.Object || root.TryGetProperty("error", out _) ||
+                        !root.TryGetProperty("videos", out var videos) || videos.ValueKind != JsonValueKind.Array)
+                        throw new JsonException("Missing channel videos data");
+
+                    int count = videos.GetArrayLength();
+                    int offset = Math.Min(skip, count);
+                    skip -= offset;
+                    while (offset < count && selectedVideos.Count < pageSize)
+                        selectedVideos.Add(videos[offset++].Clone());
+
+                    string continuation = ReadString(root, "continuation");
+                    if (offset < count)
+                    {
+                        hasNext = true;
+                        nextToken = currentToken;
+                        nextOffset = offset;
+                        break;
+                    }
+                    if (string.IsNullOrEmpty(continuation))
+                        break;
+                    if (selectedVideos.Count == pageSize)
+                    {
+                        hasNext = true;
+                        nextToken = continuation;
+                        break;
+                    }
+                    currentToken = continuation;
+                }
+
+                var events = new List<object>();
+                long latestPublished = 0;
+                foreach (var video in selectedVideos)
+                {
+                    if (video.ValueKind != JsonValueKind.Object)
+                        throw new JsonException("Invalid channel video");
+                    string videoId = ReadString(video, "videoId");
+                    if (!InputValidator.IsValidVideoId(videoId))
+                        throw new JsonException("Invalid video ID");
+                    long published = ReadNumber(video, "published");
+                    latestPublished = Math.Max(latestPublished, published);
+                    string authorId = ReadString(video, "authorId", channelId);
+                    if (string.IsNullOrEmpty(authorId))
+                        authorId = channelId;
+                    string author = ReadString(video, "author", authorId);
+                    if (string.IsNullOrEmpty(author))
+                        author = authorId;
+                    events.Add(new Dictionary<string, object>
+                    {
+                        ["id"] = Xml($"tag:youtube.com,2008:user:{channelId}:event:video_uploaded:{videoId}"),
+                        ["video_id"] = Xml(videoId),
+                        ["title"] = Xml(ReadString(video, "title")),
+                        ["description"] = Xml(ReadString(video, "description")),
+                        ["author"] = Xml(author),
+                        ["author_id"] = Xml(authorId),
+                        ["author_uri"] = Xml($"{url}/feeds/api/channels/{Uri.EscapeDataString(authorId)}"),
+                        ["published"] = Helpers.UnixToIso8601(published),
+                        ["duration"] = Math.Max(0, ReadNumber(video, "lengthSeconds")),
+                        ["view_count"] = Math.Max(0, ReadNumber(video, "viewCount")),
+                        ["playback_url"] = Xml($"{url}/getvideo/{videoId}"),
+                        ["comments_url"] = Xml($"{url}/api/videos/{videoId}/comments"),
+                        ["related_url"] = Xml($"{url}/feeds/api/videos/{videoId}/related")
+                    });
+                }
+
+                string feedUrl = $"{url}/feeds/api/events?author={Uri.EscapeDataString(channelId)}&inline=true";
+                string pageUrl = $"{feedUrl}&max-results={pageSize}";
+                string selfUrl = $"{pageUrl}&start-index={startIndex}";
+                if (!string.IsNullOrEmpty(token))
+                    selfUrl += $"&continuation={Uri.EscapeDataString(token)}";
+                if (request.Query.ContainsKey("page-offset"))
+                    selfUrl += $"&page-offset={request.Query["page-offset"]}";
+                string? nextUrl = null;
+                if (hasNext)
+                {
+                    nextUrl = $"{pageUrl}&start-index={(long)startIndex + events.Count}&page-offset={nextOffset}";
+                    if (!string.IsNullOrEmpty(nextToken))
+                        nextUrl += $"&continuation={Uri.EscapeDataString(nextToken)}";
+                }
+                templateData = new Dictionary<string, object?>
+                {
+                    ["data"] = events,
+                    ["feed_url"] = Xml(feedUrl),
+                    ["self_url"] = Xml(selfUrl),
+                    ["next_url"] = nextUrl == null ? null : Xml(nextUrl),
+                    ["channel_id"] = Xml(channelId),
+                    ["updated"] = Helpers.UnixToIso8601(latestPublished),
+                    ["item_count"] = events.Count,
+                    ["start_index"] = startIndex,
+                    // Invidious supplies no total; report the known lower bound, including a next item.
+                    ["total_results"] = (long)startIndex - 1 + events.Count + (hasNext ? 1 : 0)
+                };
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Error fetching channel activity: {ex.Message}");
+                return Results.Content("Failed to fetch channel activity", "text/plain", statusCode: 502);
+            }
+            catch (TaskCanceledException ex)
+            {
+                Console.WriteLine($"Timeout fetching channel activity: {ex.Message}");
+                return Results.Content("Timed out fetching channel activity", "text/plain", statusCode: 504);
+            }
+            catch (Exception ex) when (ex is JsonException or ArgumentException or XmlException)
+            {
+                Console.WriteLine($"Error parsing channel activity JSON: {ex.Message}");
+                return Results.Content("Failed to parse channel activity", "text/plain", statusCode: 502);
+            }
+
+            string rendered = TemplatesLoader.Instance.RenderTemplate("activity.scriban", templateData);
+            return Results.Content(rendered, "application/atom+xml; charset=utf-8");
         }
         /// <summary>
         /// Get channel information

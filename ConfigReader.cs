@@ -25,6 +25,7 @@ namespace TubeRepair_CSharp
         public string RedisIP { get; private set; } = string.Empty;
         public string InvidiusURL { get; private set; } = "https://inv.uptimetrackers.com/"; //https://redirect.invidious.io/";
         public int FeaturedVideosCount { get; private set; } = 20;
+        public int ActivityMaxResults { get; private set; } = 20;
         public int CommentCount { get; private set; } = 20;
         public string SortComments { get; private set; } = "popular";
         public bool UsePlaylistTrending { get; private set; } = false;
@@ -152,6 +153,8 @@ namespace TubeRepair_CSharp
             InvidiusURL = FindEnvironmentVariableOrConfig(config, "URL", InvidiusURL);
             Console.WriteLine($"Invidious URL: {InvidiusURL}");
             FeaturedVideosCount = FindEnvironmentVariableOrConfigInt(config, "FEATURED_VIDEOS", FeaturedVideosCount);
+            int activityMaxResults = FindEnvironmentVariableOrConfigInt(config, "ACTIVITY_MAX_RESULTS", ActivityMaxResults);
+            ActivityMaxResults = activityMaxResults > 0 ? activityMaxResults : 20;
             CommentCount = FindEnvironmentVariableOrConfigInt(config, "COMMENTS", CommentCount);
             SortComments = FindEnvironmentVariableOrConfig(config, "SORT_COMMENTS", SortComments);
             UsePlaylistTrending = FindEnvironmentVariableOrConfigBool(config, "USE_PLAYLIST_TRENDING", UsePlaylistTrending);

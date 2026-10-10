@@ -26,6 +26,7 @@ namespace TubeRepair_CSharp.Templates
             LoadTemplate("channel_info.scriban");
             LoadTemplate("search_results_channel.scriban");
             LoadTemplate("uploads.scriban");
+            LoadTemplate("activity.scriban");
         }
 
         private void LoadTemplate(string templateName)

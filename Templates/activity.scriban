@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:gd="http://schemas.google.com/g/2005" xmlns:openSearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:yt="http://gdata.youtube.com/schemas/2007" xmlns:media="http://search.yahoo.com/mrss/">
+  <id>{{feed_url}}</id>
+  <title>Channel Activity: {{channel_id}}</title>
+  <updated>{{updated}}</updated>
+  <link rel="self" type="application/atom+xml" href="{{self_url}}" />
+{{ if next_url }}
+  <link rel="next" type="application/atom+xml" href="{{next_url}}" />
+{{ end }}
+  <author><name>{{channel_id}}</name><yt:userId>{{channel_id}}</yt:userId></author>
+  <openSearch:totalResults>{{total_results}}</openSearch:totalResults>
+  <openSearch:itemsPerPage>{{item_count}}</openSearch:itemsPerPage>
+  <openSearch:startIndex>{{start_index}}</openSearch:startIndex>
+{{ for event in data }}
+  <entry>
+    <id>{{event.id}}</id>
+    <published>{{event.published}}</published>
+    <updated>{{event.published}}</updated>
+    <category scheme="http://schemas.google.com/g/2005#kind" term="http://gdata.youtube.com/schemas/2007#userEvent" />
+    <category scheme="http://gdata.youtube.com/schemas/2007/userevents.cat" term="video_uploaded" />
+    <title>{{event.author}} uploaded a video: {{event.title}}</title>
+    <author><name>{{event.author}}</name><uri>{{event.author_uri}}</uri><yt:userId>{{event.author_id}}</yt:userId></author>
+    <yt:videoid>{{event.video_id}}</yt:videoid>
+    <link rel="http://gdata.youtube.com/schemas/2007#video" type="application/atom+xml" href="{{event.playback_url}}">
+      <entry>
+        <id>tag:youtube.com,2008:video:{{event.video_id}}</id>
+        <published>{{event.published}}</published>
+        <updated>{{event.published}}</updated>
+        <category scheme="http://schemas.google.com/g/2005#kind" term="http://gdata.youtube.com/schemas/2007#video" />
+        <title>{{event.title}}</title>
+        <content type="video/mp4" src="{{event.playback_url}}" />
+        <link rel="self" href="{{event.playback_url}}" />
+        <link rel="alternate" type="text/html" href="https://www.youtube.com/watch?v={{event.video_id}}" />
+        <link rel="http://gdata.youtube.com/schemas/2007#video.related" type="application/atom+xml" href="{{event.related_url}}" />
+        <author><name>{{event.author}}</name><uri>{{event.author_uri}}</uri><yt:userId>{{event.author_id}}</yt:userId></author>
+        <gd:comments><gd:feedLink href="{{event.comments_url}}" /></gd:comments>
+        <yt:statistics viewCount="{{event.view_count}}" favoriteCount="0" />
+        <yt:accessControl action="list" permission="allowed" />
+        <yt:accessControl action="embed" permission="allowed" />
+        <yt:accessControl action="comment" permission="allowed" />
+        <yt:accessControl action="rate" permission="allowed" />
+        <media:group>
+          <media:title type="plain">{{event.title}}</media:title>
+          <media:description type="plain">{{event.description}}</media:description>
+          <media:credit role="uploader" scheme="urn:youtube" yt:display="{{event.author}}">{{event.author}}</media:credit>
+          <media:player url="https://www.youtube.com/watch?v={{event.video_id}}" />
+          <media:thumbnail url="https://i.ytimg.com/vi/{{event.video_id}}/default.jpg" height="90" width="120" yt:name="default" />
+          <media:thumbnail url="https://i.ytimg.com/vi/{{event.video_id}}/hqdefault.jpg" height="360" width="480" yt:name="hqdefault" />
+          <media:content url="{{event.playback_url}}" type="video/mp4" medium="video" isDefault="true" expression="full" duration="{{event.duration}}" yt:format="3" />
+          <media:content url="{{event.playback_url}}" type="video/mp4" medium="video" expression="full" duration="{{event.duration}}" yt:format="8" />
+          <yt:duration seconds="{{event.duration}}" />
+          <yt:uploaded>{{event.published}}</yt:uploaded>
+          <yt:uploaderId>{{event.author_id}}</yt:uploaderId>
+          <yt:videoid>{{event.video_id}}</yt:videoid>
+        </media:group>
+      </entry>
+    </link>
+  </entry>
+{{ end }}
+</feed>
